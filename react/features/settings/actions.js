@@ -82,5 +82,9 @@ export function submitProfileTab(newState: Object): Function {
         if (newState.email !== currentState.email) {
             APP.conference.changeLocalEmail(newState.email);
         }
+
+        if (newState.callMeAt !== currentState.callMeAt) {
+            APP.conference.changeLocalCallMeAt(newState.callMeAt);
+        }
     };
 }

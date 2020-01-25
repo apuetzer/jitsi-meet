@@ -42,6 +42,11 @@ export type Props = {
     email: string,
 
     /**
+     * The DN to contact the user at.
+     */
+    callMeAt: String,
+
+    /**
      * Invoked to obtain translated strings.
      */
     t: Function
@@ -55,7 +60,8 @@ export type Props = {
 class ProfileTab extends AbstractDialogTab<Props> {
     static defaultProps = {
         displayName: '',
-        email: ''
+        email: '',
+        callMeAt: ''
     };
 
     /**
@@ -82,6 +88,7 @@ class ProfileTab extends AbstractDialogTab<Props> {
             authEnabled,
             displayName,
             email,
+            callMeAt,
             t
         } = this.props;
 
@@ -118,6 +125,21 @@ class ProfileTab extends AbstractDialogTab<Props> {
                             shouldFitContainer = { true }
                             type = 'text'
                             value = { email } />
+                    </div>
+                    <div className = 'profile-edit-field'>
+                        <FieldTextStateless
+                            compact = { true }
+                            id = 'setCallMeAt'
+                            label = { t('profile.setCallMeAtLabel') }
+                            // eslint-disable-next-line react/jsx-no-bind
+                            onChange = {
+                                ({ target: { value } }) =>
+                                    super._onChange({ callMeAt: value })
+                            }
+                            placeholder = { t('profile.setCallMeAtInput') }
+                            shouldFitContainer = { true }
+                            type = 'text'
+                            value = { callMeAt } />
                     </div>
                 </div>
                 { authEnabled && this._renderAuth() }

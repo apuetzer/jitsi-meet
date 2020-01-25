@@ -152,6 +152,10 @@ function initCommands() {
             sendAnalytics(createApiEvent('email.changed'));
             APP.conference.changeLocalEmail(email);
         },
+        'callMeAt': callMeAt => {
+            sendAnalytics(createApiEvent('callMeAt.changed'));
+            APP.conference.changeLocalCallMeAt(callMeAt);
+        },
         'avatar-url': avatarUrl => {
             sendAnalytics(createApiEvent('avatar.url.changed'));
             APP.conference.changeLocalAvatarUrl(avatarUrl);

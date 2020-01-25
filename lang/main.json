@@ -469,6 +469,8 @@
         "setDisplayNameLabel": "Set your display name",
         "setEmailInput": "Enter e-mail",
         "setEmailLabel": "Set your gravatar email",
+        "setCallMeAtInput": "Enter Phone Number",
+        "setCallMeAtLabel": "Set your contact number",
         "title": "Profile"
     },
     "raisedHand": "Would like to speak",

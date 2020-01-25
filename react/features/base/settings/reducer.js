@@ -26,6 +26,7 @@ const DEFAULT_STATE = {
     disableP2P: undefined,
     displayName: undefined,
     email: undefined,
+    callMeAt: undefined,
     localFlipX: true,
     micDeviceId: undefined,
     serverURL: undefined,
@@ -125,6 +126,7 @@ function _initSettings(featureState) {
     // jibri, and remove the old settings.js values.
     const savedDisplayName = window.localStorage.getItem('displayname');
     const savedEmail = window.localStorage.getItem('email');
+    const savedCallMeAt = window.localStorage.getItem('callMeAt');
     let avatarID = _.escape(window.localStorage.getItem('avatarId'));
 
     // The helper _.escape will convert null to an empty strings. The empty
@@ -135,6 +137,7 @@ function _initSettings(featureState) {
     const displayName
         = savedDisplayName === null ? undefined : _.escape(savedDisplayName);
     const email = savedEmail === null ? undefined : _.escape(savedEmail);
+    const callMeAt = savedCallMeAt === null ? undefined : _.escape(savedCallMeAt);
 
     if (!avatarID) {
         // if there is no avatar id, we generate a unique one and use it forever
@@ -144,7 +147,8 @@ function _initSettings(featureState) {
     settings = assignIfDefined({
         avatarID,
         displayName,
-        email
+        email,
+        callMeAt
     }, settings);
 
     if (!browser.isReactNative()) {

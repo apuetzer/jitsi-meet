@@ -2555,6 +2555,43 @@ export default {
     },
 
     /**
+     * Changes the callMeAt number for the local user
+     * @param callMeAt {string} the new email
+     */
+    changeLocalCallMeAt(callMeAt = '') {
+        const localParticipant = getLocalParticipant(APP.store.getState());
+
+        const formattedCallMeAt = String(callMeAt).trim();
+
+        if (formattedCallMeAt === localParticipant.callMeAt) {
+            return;
+        }
+
+        const localId = localParticipant.id;
+
+        APP.store.dispatch(participantUpdated({
+            // XXX Only the local participant is allowed to update without
+            // stating the JitsiConference instance (i.e. participant property
+            // `conference` for a remote participant) because the local
+            // participant is uniquely identified by the very fact that there is
+            // only one local participant.
+
+            id: localId,
+            local: true,
+            callMeAt: formattedCallMeAt
+        }));
+
+        APP.store.dispatch(updateSettings({
+            callMeAt: formattedCallMeAt
+        }));
+
+        // APP.API.notifyEmailChanged(localId, {
+        //     email: formattedEmail
+        // });
+        // sendData(commands.CALLMEAT, formattedCallMeAt);
+    },
+
+    /**
      * Changes the avatar url for the local user
      * @param url {string} the new url
      */

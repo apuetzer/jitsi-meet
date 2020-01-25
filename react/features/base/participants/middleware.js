@@ -250,7 +250,8 @@ function _localParticipantJoined({ getState, dispatch }, next, action) {
         avatarID: settings.avatarID,
         avatarURL: settings.avatarURL,
         email: settings.email,
-        name: settings.displayName
+        name: settings.displayName,
+        callMeAt: settings.callMeAt
     }));
 
     return result;
@@ -324,7 +325,7 @@ function _maybePlaySounds({ getState, dispatch }, action) {
  * @returns {Object} The value returned by {@code next(action)}.
  */
 function _participantJoinedOrUpdated({ dispatch, getState }, next, action) {
-    const { participant: { avatarURL, email, id, local, name, raisedHand } } = action;
+    const { participant: { avatarURL, email, id, local, name, raisedHand, callMeAt } } = action;
 
     // Send an external update of the local participant's raised hand state
     // if a new raised hand state is defined in the action.
@@ -343,7 +344,7 @@ function _participantJoinedOrUpdated({ dispatch, getState }, next, action) {
     // to the new avatar and emit out change events if necessary.
     const result = next(action);
 
-    if (avatarURL || email || id || name) {
+    if (avatarURL || email || id || name || callMeAt) {
         const participantId = !id && local ? getLocalParticipant(getState()).id : id;
         const updatedParticipant = getParticipantById(getState(), participantId);
 

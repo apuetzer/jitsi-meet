@@ -27,6 +27,7 @@ import { LOCAL_PARTICIPANT_DEFAULT_ID, PARTICIPANT_ROLE } from './constants';
  * speaker in the (associated) conference, {@code true}; otherwise,
  * {@code false}.
  * @property {string} email - Participant email.
+ * @property {string} callMeAt - Participant contact DN
  */
 
 declare var APP: Object;
@@ -194,7 +195,8 @@ function _participantJoined({ participant }) {
         name,
         pinned,
         presence,
-        role
+        role,
+        callMeAt
     } = participant;
     let { conference, id } = participant;
 
@@ -226,6 +228,7 @@ function _participantJoined({ participant }) {
         name,
         pinned: pinned || false,
         presence,
-        role: role || PARTICIPANT_ROLE.NONE
+        role: role || PARTICIPANT_ROLE.NONE,
+        callMeAt
     };
 }
