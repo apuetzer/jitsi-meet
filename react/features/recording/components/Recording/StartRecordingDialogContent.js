@@ -6,6 +6,7 @@ import {
     createRecordingDialogEvent,
     sendAnalytics
 } from '../../../analytics';
+import { ColorSchemeRegistry } from '../../../base/color-scheme';
 import {
     _abstractMapStateToProps
 } from '../../../base/dialog';
@@ -20,17 +21,13 @@ import {
 } from '../../../base/react';
 import { connect } from '../../../base/redux';
 import { ColorPalette, StyleType } from '../../../base/styles';
+import { isVpaasMeeting } from '../../../billing-counter/functions';
 import { authorizeDropbox, updateDropboxToken } from '../../../dropbox';
-
-import {
-    default as styles,
-    DROPBOX_LOGO,
-    ICON_SHARE,
-    JITSI_LOGO
-} from './styles';
-
 import { RECORDING_TYPES } from '../../constants';
 import { getRecordingDurationEstimation } from '../../functions';
+
+import { DROPBOX_LOGO, ICON_SHARE, JITSI_LOGO } from './styles';
+
 
 type Props = {
 
@@ -38,6 +35,11 @@ type Props = {
      * Style of the dialogs feature.
      */
     _dialogStyles: StyleType,
+
+    /**
+     * The color-schemed stylesheet of this component.
+     */
+    _styles: StyleType,
 
     /**
      * The redux dispatch function.
@@ -70,6 +72,11 @@ type Props = {
      * <tt>true</tt> if we are in process of validating the oauth token.
      */
     isValidating: boolean,
+
+    /**
+     * Whether or not the current meeting is a vpaas one.
+     */
+    isVpaas: boolean,
 
     /**
      * The function will be called when there are changes related to the
@@ -125,10 +132,8 @@ class StartRecordingDialogContent extends Component<Props> {
         // Bind event handler so it is only bound once for every instance.
         this._onSignIn = this._onSignIn.bind(this);
         this._onSignOut = this._onSignOut.bind(this);
-        this._onDropboxSwitchChange
-            = this._onDropboxSwitchChange.bind(this);
-        this._onRecordingServiceSwitchChange
-            = this._onRecordingServiceSwitchChange.bind(this);
+        this._onDropboxSwitchChange = this._onDropboxSwitchChange.bind(this);
+        this._onRecordingServiceSwitchChange = this._onRecordingServiceSwitchChange.bind(this);
     }
 
     /**
@@ -138,6 +143,8 @@ class StartRecordingDialogContent extends Component<Props> {
      * @returns {React$Component}
      */
     render() {
+        const { _styles: styles } = this.props;
+
         return (
             <Container
                 className = 'recording-dialog'
@@ -161,10 +168,13 @@ class StartRecordingDialogContent extends Component<Props> {
 
         const {
             _dialogStyles,
+            _styles: styles,
             isValidating,
             onSharingSettingChanged,
             selectedRecordingService,
-            sharingSetting, t } = this.props;
+            sharingSetting,
+            t
+        } = this.props;
 
         const controlDisabled = selectedRecordingService !== RECORDING_TYPES.JITSI_REC_SERVICE;
         let mainContainerClasses = 'recording-header recording-header-line';
@@ -222,7 +232,7 @@ class StartRecordingDialogContent extends Component<Props> {
             return null;
         }
 
-        const { _dialogStyles, isValidating, t } = this.props;
+        const { _dialogStyles, _styles: styles, isValidating, isVpaas, t } = this.props;
 
         const switchContent
             = this.props.integrationsEnabled
@@ -230,14 +240,13 @@ class StartRecordingDialogContent extends Component<Props> {
                     <Switch
                         className = 'recording-switch'
                         disabled = { isValidating }
-                        onValueChange
-                            = { this._onRecordingServiceSwitchChange }
+                        onValueChange = { this._onRecordingServiceSwitchChange }
                         style = { styles.switch }
                         trackColor = {{ false: ColorPalette.lightGrey }}
-                        value = {
-                            this.props.selectedRecordingService
-                                === RECORDING_TYPES.JITSI_REC_SERVICE } />
+                        value = { this.props.selectedRecordingService === RECORDING_TYPES.JITSI_REC_SERVICE } />
                 ) : null;
+
+        const icon = isVpaas ? ICON_SHARE : JITSI_LOGO;
 
         return (
             <Container
@@ -247,7 +256,7 @@ class StartRecordingDialogContent extends Component<Props> {
                 <Container className = 'recording-icon-container'>
                     <Image
                         className = 'recording-icon'
-                        src = { JITSI_LOGO }
+                        src = { icon }
                         style = { styles.recordingIcon } />
                 </Container>
                 <Text
@@ -274,7 +283,7 @@ class StartRecordingDialogContent extends Component<Props> {
             return null;
         }
 
-        const { _dialogStyles, isTokenValid, isValidating, t } = this.props;
+        const { _dialogStyles, _styles: styles, isTokenValid, isValidating, t } = this.props;
 
         let content = null;
         let switchContent = null;
@@ -421,7 +430,7 @@ class StartRecordingDialogContent extends Component<Props> {
      * @returns {React$Component}
      */
     _renderSignOut() {
-        const { spaceLeft, t, userName } = this.props;
+        const { _styles: styles, spaceLeft, t, userName } = this.props;
         const duration = getRecordingDurationEstimation(spaceLeft);
 
         return (
@@ -457,9 +466,7 @@ class StartRecordingDialogContent extends Component<Props> {
      * @returns {void}
      */
     _onSignIn() {
-        sendAnalytics(
-            createRecordingDialogEvent('start', 'signIn.button')
-        );
+        sendAnalytics(createRecordingDialogEvent('start', 'signIn.button'));
         this.props.dispatch(authorizeDropbox());
     }
 
@@ -471,12 +478,23 @@ class StartRecordingDialogContent extends Component<Props> {
      * @returns {void}
      */
     _onSignOut() {
-        sendAnalytics(
-            createRecordingDialogEvent('start', 'signOut.button')
-        );
+        sendAnalytics(createRecordingDialogEvent('start', 'signOut.button'));
         this.props.dispatch(updateDropboxToken());
     }
 }
 
-export default translate(
-    connect(_abstractMapStateToProps)(StartRecordingDialogContent));
+/**
+ * Maps part of the redux state to the props of this component.
+ *
+ * @param {Object} state - The Redux state.
+ * @returns {Props}
+ */
+function _mapStateToProps(state) {
+    return {
+        ..._abstractMapStateToProps(state),
+        isVpaas: isVpaasMeeting(state),
+        _styles: ColorSchemeRegistry.get(state, 'StartRecordingDialogContent')
+    };
+}
+
+export default translate(connect(_mapStateToProps)(StartRecordingDialogContent));

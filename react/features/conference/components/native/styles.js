@@ -1,8 +1,9 @@
+import { ColorSchemeRegistry, schemeColor } from '../../../base/color-scheme';
 import { BoxModel, ColorPalette, fixAndroidViewClipping } from '../../../base/styles';
-
 import { FILMSTRIP_SIZE } from '../../../filmstrip';
 
 export const NAVBAR_GRADIENT_COLORS = [ '#000000FF', '#00000000' ];
+export const INSECURE_ROOM_NAME_LABEL_COLOR = ColorPalette.warning;
 
 // From brand guideline
 const BOTTOM_GRADIENT_HEIGHT = 290;
@@ -31,6 +32,10 @@ export default {
         backgroundColor: ColorPalette.appBackground,
         flex: 1
     }),
+
+    displayNameContainer: {
+        margin: 10
+    },
 
     gradient: {
         position: 'absolute',
@@ -72,6 +77,29 @@ export default {
         top: 0
     },
 
+    lonelyButton: {
+        alignItems: 'center',
+        borderRadius: 24,
+        flexDirection: 'row',
+        height: 48,
+        justifyContent: 'space-around',
+        paddingHorizontal: 12
+    },
+
+    lonelyButtonComponents: {
+        marginHorizontal: 6
+    },
+
+    lonelyMeetingContainer: {
+        alignSelf: 'stretch',
+        alignItems: 'center',
+        padding: BoxModel.padding * 2
+    },
+
+    lonelyMessage: {
+        paddingVertical: 12
+    },
+
     navBarButton: {
         iconStyle: {
             color: ColorPalette.white,
@@ -105,6 +133,12 @@ export default {
         paddingHorizontal: 14
     },
 
+    roomTimer: {
+        color: ColorPalette.white,
+        fontSize: 15,
+        opacity: 0.6
+    },
+
     roomName: {
         color: ColorPalette.white,
         fontSize: 17,
@@ -112,8 +146,8 @@ export default {
     },
 
     roomNameWrapper: {
-        flexDirection: 'row',
-        justifyContent: 'center',
+        flexDirection: 'column',
+        alignItems: 'center',
         left: 0,
         paddingHorizontal: 48,
         position: 'absolute',
@@ -138,5 +172,19 @@ export default {
         // On iPhone X there is the notch. In the two cases BoxModel.margin is
         // not enough.
         top: BoxModel.margin * 3
+    },
+
+    insecureRoomNameLabel: {
+        backgroundColor: INSECURE_ROOM_NAME_LABEL_COLOR
     }
 };
+
+ColorSchemeRegistry.register('Conference', {
+    lonelyButton: {
+        backgroundColor: schemeColor('inviteButtonBackground')
+    },
+
+    lonelyMessage: {
+        color: schemeColor('onVideoText')
+    }
+});

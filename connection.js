@@ -1,19 +1,28 @@
 /* global APP, JitsiMeetJS, config */
 
-import AuthHandler from './modules/UI/authentication/AuthHandler';
-import jitsiLocalStorage from './modules/util/JitsiLocalStorage';
+import { jitsiLocalStorage } from '@jitsi/js-utils';
+import Logger from 'jitsi-meet-logger';
 
+import AuthHandler from './modules/UI/authentication/AuthHandler';
 import {
     connectionEstablished,
     connectionFailed
-} from './react/features/base/connection';
+} from './react/features/base/connection/actions';
 import {
     isFatalJitsiConnectionError,
     JitsiConnectionErrors,
     JitsiConnectionEvents
 } from './react/features/base/lib-jitsi-meet';
+import { setPrejoinDisplayNameRequired } from './react/features/prejoin/actions';
 
-const logger = require('jitsi-meet-logger').getLogger(__filename);
+const logger = Logger.getLogger(__filename);
+
+/**
+ * The feature announced so we can distinguish jibri participants.
+ *
+ * @type {string}
+ */
+export const DISCO_JIBRI_FEATURE = 'http://jitsi.org/protocol/jibri';
 
 /**
  * Checks if we have data to use attach instead of connect. If we have the data
@@ -73,15 +82,23 @@ function checkForAttachParametersAndConnect(id, password, connection) {
  */
 function connect(id, password, roomName) {
     const connectionConfig = Object.assign({}, config);
-    const { issuer, jwt } = APP.store.getState()['features/base/jwt'];
+    const { jwt } = APP.store.getState()['features/base/jwt'];
 
-    connectionConfig.bosh += `?room=${roomName}`;
+    // Use Websocket URL for the web app if configured. Note that there is no 'isWeb' check, because there's assumption
+    // that this code executes only on web browsers/electron. This needs to be changed when mobile and web are unified.
+    let serviceUrl = connectionConfig.websocket || connectionConfig.bosh;
 
-    const connection
-        = new JitsiMeetJS.JitsiConnection(
-            null,
-            jwt && issuer && issuer !== 'anonymous' ? jwt : undefined,
-            connectionConfig);
+    serviceUrl += `?room=${roomName}`;
+
+    // FIXME Remove deprecated 'bosh' option assignment at some point(LJM will be accepting only 'serviceUrl' option
+    //  in future). It's included for the time being for Jitsi Meet and lib-jitsi-meet versions interoperability.
+    connectionConfig.serviceUrl = connectionConfig.bosh = serviceUrl;
+
+    const connection = new JitsiMeetJS.JitsiConnection(null, jwt, connectionConfig);
+
+    if (config.iAmRecorder) {
+        connection.addFeature(DISCO_JIBRI_FEATURE);
+    }
 
     return new Promise((resolve, reject) => {
         connection.addEventListener(
@@ -93,6 +110,10 @@ function connect(id, password, roomName) {
         connection.addEventListener(
             JitsiConnectionEvents.CONNECTION_FAILED,
             connectionFailedHandler);
+        connection.addEventListener(
+            JitsiConnectionEvents.DISPLAY_NAME_REQUIRED,
+            displayNameRequiredHandler
+        );
 
         /* eslint-disable max-params */
         /**
@@ -146,6 +167,14 @@ function connect(id, password, roomName) {
             reject(err);
         }
 
+        /**
+         * Marks the display name for the prejoin screen as required.
+         * This can happen if a user tries to join a room with lobby enabled.
+         */
+        function displayNameRequiredHandler() {
+            APP.store.dispatch(setPrejoinDisplayNameRequired());
+        }
+
         checkForAttachParametersAndConnect(id, password, connection);
     });
 }
@@ -178,10 +207,9 @@ export function openConnection({ id, password, retry, roomName }) {
 
     return connect(id, password, roomName).catch(err => {
         if (retry) {
-            const { issuer, jwt } = APP.store.getState()['features/base/jwt'];
+            const { jwt } = APP.store.getState()['features/base/jwt'];
 
-            if (err === JitsiConnectionErrors.PASSWORD_REQUIRED
-                    && (!jwt || issuer === 'anonymous')) {
+            if (err === JitsiConnectionErrors.PASSWORD_REQUIRED && !jwt) {
                 return AuthHandler.requestAuth(roomName, connect);
             }
         }

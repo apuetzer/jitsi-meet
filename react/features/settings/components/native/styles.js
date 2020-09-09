@@ -1,15 +1,14 @@
-import {
-    ColorPalette,
-    createStyleSheet
-} from '../../../base/styles';
+import { ColorPalette } from '../../../base/styles';
 
 export const ANDROID_UNDERLINE_COLOR = 'transparent';
+export const PLACEHOLDER_COLOR = ColorPalette.lightGrey;
+
 const TEXT_SIZE = 17;
 
 /**
  * The styles of the native components of the feature {@code settings}.
  */
-export default createStyleSheet({
+export default {
     /**
      * Standardized style for a field container {@code View}.
      */
@@ -18,6 +17,15 @@ export default createStyleSheet({
         flexDirection: 'row',
         minHeight: 65,
         paddingHorizontal: 8
+    },
+
+    /**
+     * * Appended style for column layout fields.
+     */
+    fieldContainerColumn: {
+        alignItems: 'flex-start',
+        flexDirection: 'column',
+        paddingVertical: 3
     },
 
     /**
@@ -34,6 +42,13 @@ export default createStyleSheet({
      */
     fieldLabelText: {
         fontSize: TEXT_SIZE
+    },
+
+    /**
+     * Appended style for column layout fields.
+     */
+    fieldLabelTextColumn: {
+        fontSize: 12
     },
 
     /**
@@ -63,11 +78,6 @@ export default createStyleSheet({
         padding: 5
     },
 
-    settingsForm: {
-        backgroundColor: ColorPalette.white,
-        flex: 1
-    },
-
     /**
      * Global {@code Text} color for the components.
      */
@@ -79,8 +89,20 @@ export default createStyleSheet({
      * Standard text input field style.
      */
     textInputField: {
+        color: ColorPalette.black,
         flex: 1,
         fontSize: TEXT_SIZE,
         textAlign: 'right'
+    },
+
+    /**
+     * Appended style for column layout fields.
+     */
+    textInputFieldColumn: {
+        backgroundColor: 'rgb(245, 245, 245)',
+        borderRadius: 8,
+        marginVertical: 5,
+        paddingVertical: 3,
+        textAlign: 'left'
     }
-});
+};
