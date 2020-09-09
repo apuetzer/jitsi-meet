@@ -17,7 +17,9 @@
 package org.jitsi.meet.sdk;
 
 import android.content.Context;
+import android.media.AudioManager;
 import android.os.Build;
+import android.telecom.CallAudioState;
 import androidx.annotation.RequiresApi;
 
 import java.util.HashSet;
@@ -38,6 +40,11 @@ class AudioDeviceHandlerConnectionService implements
     private final static String TAG = AudioDeviceHandlerConnectionService.class.getSimpleName();
 
     /**
+     * {@link AudioManager} instance used to interact with the Android audio subsystem.
+     */
+    private AudioManager audioManager;
+
+    /**
      * Reference to the main {@code AudioModeModule}.
      */
     private AudioModeModule module;
@@ -52,20 +59,20 @@ class AudioDeviceHandlerConnectionService implements
      */
     private static int audioDeviceToRouteInt(String audioDevice) {
         if (audioDevice == null) {
-            return android.telecom.CallAudioState.ROUTE_EARPIECE;
+            return CallAudioState.ROUTE_SPEAKER;
         }
         switch (audioDevice) {
             case AudioModeModule.DEVICE_BLUETOOTH:
-                return android.telecom.CallAudioState.ROUTE_BLUETOOTH;
+                return CallAudioState.ROUTE_BLUETOOTH;
             case AudioModeModule.DEVICE_EARPIECE:
-                return android.telecom.CallAudioState.ROUTE_EARPIECE;
+                return CallAudioState.ROUTE_EARPIECE;
             case AudioModeModule.DEVICE_HEADPHONES:
-                return android.telecom.CallAudioState.ROUTE_WIRED_HEADSET;
+                return CallAudioState.ROUTE_WIRED_HEADSET;
             case AudioModeModule.DEVICE_SPEAKER:
-                return android.telecom.CallAudioState.ROUTE_SPEAKER;
+                return CallAudioState.ROUTE_SPEAKER;
             default:
                 JitsiMeetLogger.e(TAG + " Unsupported device name: " + audioDevice);
-                return android.telecom.CallAudioState.ROUTE_EARPIECE;
+                return CallAudioState.ROUTE_SPEAKER;
         }
     }
 
@@ -78,20 +85,16 @@ class AudioDeviceHandlerConnectionService implements
      */
     private static Set<String> routesToDeviceNames(int supportedRouteMask) {
         Set<String> devices = new HashSet<>();
-        if ((supportedRouteMask & android.telecom.CallAudioState.ROUTE_EARPIECE)
-                == android.telecom.CallAudioState.ROUTE_EARPIECE) {
+        if ((supportedRouteMask & CallAudioState.ROUTE_EARPIECE) == CallAudioState.ROUTE_EARPIECE) {
             devices.add(AudioModeModule.DEVICE_EARPIECE);
         }
-        if ((supportedRouteMask & android.telecom.CallAudioState.ROUTE_BLUETOOTH)
-                == android.telecom.CallAudioState.ROUTE_BLUETOOTH) {
+        if ((supportedRouteMask & CallAudioState.ROUTE_BLUETOOTH) == CallAudioState.ROUTE_BLUETOOTH) {
             devices.add(AudioModeModule.DEVICE_BLUETOOTH);
         }
-        if ((supportedRouteMask & android.telecom.CallAudioState.ROUTE_SPEAKER)
-                == android.telecom.CallAudioState.ROUTE_SPEAKER) {
+        if ((supportedRouteMask & CallAudioState.ROUTE_SPEAKER) == CallAudioState.ROUTE_SPEAKER) {
             devices.add(AudioModeModule.DEVICE_SPEAKER);
         }
-        if ((supportedRouteMask & android.telecom.CallAudioState.ROUTE_WIRED_HEADSET)
-                == android.telecom.CallAudioState.ROUTE_WIRED_HEADSET) {
+        if ((supportedRouteMask & CallAudioState.ROUTE_WIRED_HEADSET) == CallAudioState.ROUTE_WIRED_HEADSET) {
             devices.add(AudioModeModule.DEVICE_HEADPHONES);
         }
         return devices;
@@ -105,17 +108,18 @@ class AudioDeviceHandlerConnectionService implements
      */
     private int supportedRouteMask = -1;
 
-    public AudioDeviceHandlerConnectionService() {
+    public AudioDeviceHandlerConnectionService(AudioManager audioManager) {
+        this.audioManager = audioManager;
     }
 
     @Override
-    public void onCallAudioStateChange(final android.telecom.CallAudioState callAudioState) {
+    public void onCallAudioStateChange(final CallAudioState state) {
         module.runInAudioThread(new Runnable() {
             @Override
             public void run() {
                 boolean audioRouteChanged
-                    = audioDeviceToRouteInt(module.getSelectedDevice()) != callAudioState.getRoute();
-                int newSupportedRoutes = callAudioState.getSupportedRouteMask();
+                    = audioDeviceToRouteInt(module.getSelectedDevice()) != state.getRoute();
+                int newSupportedRoutes = state.getSupportedRouteMask();
                 boolean audioDevicesChanged = supportedRouteMask != newSupportedRoutes;
                 if (audioDevicesChanged) {
                     supportedRouteMask = newSupportedRoutes;
@@ -133,13 +137,16 @@ class AudioDeviceHandlerConnectionService implements
     }
 
     @Override
-    public void start(Context context, AudioModeModule audioModeModule) {
+    public void start(AudioModeModule audioModeModule) {
         JitsiMeetLogger.i("Using " + TAG + " as the audio device handler");
 
         module = audioModeModule;
+
         RNConnectionService rcs = ReactInstanceManagerHolder.getNativeModule(RNConnectionService.class);
         if (rcs != null) {
             rcs.setCallAudioStateListener(this);
+        } else {
+            JitsiMeetLogger.w(TAG + " Couldn't set call audio state listener, module is null");
         }
     }
 
@@ -148,6 +155,8 @@ class AudioDeviceHandlerConnectionService implements
         RNConnectionService rcs = ReactInstanceManagerHolder.getNativeModule(RNConnectionService.class);
         if (rcs != null) {
             rcs.setCallAudioStateListener(null);
+        } else {
+            JitsiMeetLogger.w(TAG + " Couldn't set call audio state listener, module is null");
         }
     }
 
@@ -159,6 +168,16 @@ class AudioDeviceHandlerConnectionService implements
 
     @Override
     public boolean setMode(int mode) {
+        if (mode != AudioModeModule.DEFAULT) {
+            // This shouldn't be needed when using ConnectionService, but some devices have been
+            // observed not doing it.
+            try {
+                audioManager.setMicrophoneMute(false);
+            } catch (Throwable tr) {
+                JitsiMeetLogger.w(tr, TAG + " Failed to unmute the microphone");
+            }
+        }
+
         return true;
     }
 }

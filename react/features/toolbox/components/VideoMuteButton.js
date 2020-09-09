@@ -1,5 +1,6 @@
 // @flow
 
+import UIEvents from '../../../../service/UI/UIEvents';
 import {
     ACTION_SHORTCUT_TRIGGERED,
     VIDEO_MUTE,
@@ -8,17 +9,16 @@ import {
     sendAnalytics
 } from '../../analytics';
 import { setAudioOnly } from '../../base/audio-only';
+import { hasAvailableDevices } from '../../base/devices';
 import { translate } from '../../base/i18n';
 import {
-    MEDIA_TYPE,
     VIDEO_MUTISM_AUTHORITY,
     setVideoMuted
 } from '../../base/media';
 import { connect } from '../../base/redux';
-import { AbstractVideoMuteButton } from '../../base/toolbox';
-import type { AbstractButtonProps } from '../../base/toolbox';
-import { isLocalTrackMuted } from '../../base/tracks';
-import UIEvents from '../../../../service/UI/UIEvents';
+import { AbstractVideoMuteButton } from '../../base/toolbox/components';
+import type { AbstractButtonProps } from '../../base/toolbox/components';
+import { getLocalVideoType, isLocalVideoTrackMuted } from '../../base/tracks';
 
 declare var APP: Object;
 
@@ -33,9 +33,19 @@ type Props = AbstractButtonProps & {
     _audioOnly: boolean,
 
     /**
+     * MEDIA_TYPE of the local video.
+     */
+    _videoMediaType: string,
+
+    /**
      * Whether video is currently muted or not.
      */
     _videoMuted: boolean,
+
+    /**
+     * Whether video button is disabled or not.
+     */
+    _videoDisabled: boolean,
 
     /**
      * The redux {@code dispatch} function.
@@ -93,6 +103,17 @@ class VideoMuteButton extends AbstractVideoMuteButton<Props, *> {
     }
 
     /**
+     * Indicates if video is currently disabled or not.
+     *
+     * @override
+     * @protected
+     * @returns {boolean}
+     */
+    _isDisabled() {
+        return this.props._videoDisabled;
+    }
+
+    /**
      * Indicates if video is currently muted ot nor.
      *
      * @override
@@ -136,10 +157,12 @@ class VideoMuteButton extends AbstractVideoMuteButton<Props, *> {
             this.props.dispatch(
                 setAudioOnly(false, /* ensureTrack */ true));
         }
+        const mediaType = this.props._videoMediaType;
 
         this.props.dispatch(
             setVideoMuted(
                 videoMuted,
+                mediaType,
                 VIDEO_MUTISM_AUTHORITY.USER,
                 /* ensureTrack */ true));
 
@@ -167,7 +190,9 @@ function _mapStateToProps(state): Object {
 
     return {
         _audioOnly: Boolean(audioOnly),
-        _videoMuted: isLocalTrackMuted(tracks, MEDIA_TYPE.VIDEO)
+        _videoDisabled: !hasAvailableDevices(state, 'videoInput'),
+        _videoMediaType: getLocalVideoType(tracks),
+        _videoMuted: isLocalVideoTrackMuted(tracks)
     };
 }
 

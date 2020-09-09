@@ -16,11 +16,8 @@
 
 package org.jitsi.meet.sdk;
 
-import android.content.Context;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
-import android.os.Build;
-import androidx.annotation.RequiresApi;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -34,7 +31,6 @@ import org.jitsi.meet.sdk.log.JitsiMeetLogger;
  * default it's only used on versions < O, since versions >= O use ConnectionService, but it
  * can be disabled.
  */
-@RequiresApi(Build.VERSION_CODES.M)
 class AudioDeviceHandlerGeneric implements
         AudioModeModule.AudioDeviceHandlerInterface,
         AudioManager.OnAudioFocusChangeListener {
@@ -117,7 +113,8 @@ class AudioDeviceHandlerGeneric implements
             }
         };
 
-    public AudioDeviceHandlerGeneric() {
+    public AudioDeviceHandlerGeneric(AudioManager audioManager) {
+        this.audioManager = audioManager;
     }
 
     /**
@@ -178,11 +175,10 @@ class AudioDeviceHandlerGeneric implements
     }
 
     @Override
-    public void start(Context context, AudioModeModule audioModeModule) {
+    public void start(AudioModeModule audioModeModule) {
         JitsiMeetLogger.i("Using " + TAG + " as the audio device handler");
 
         module = audioModeModule;
-        audioManager = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
 
         // Setup runtime device change detection.
         audioManager.registerAudioDeviceCallback(audioDeviceCallback, null);
@@ -198,11 +194,11 @@ class AudioDeviceHandlerGeneric implements
 
     @Override
     public void setAudioRoute(String device) {
-        // Turn bluetooth on / off
-        setBluetoothAudioRoute(device.equals(AudioModeModule.DEVICE_BLUETOOTH));
-
         // Turn speaker on / off
         audioManager.setSpeakerphoneOn(device.equals(AudioModeModule.DEVICE_SPEAKER));
+
+        // Turn bluetooth on / off
+        setBluetoothAudioRoute(device.equals(AudioModeModule.DEVICE_BLUETOOTH));
     }
 
     @Override

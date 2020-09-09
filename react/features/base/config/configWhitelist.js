@@ -1,3 +1,5 @@
+import extraConfigWhitelist from './extraConfigWhitelist';
+
 /**
  * The config keys to whitelist, the keys that can be overridden.
  * Currently we can only whitelist the first part of the properties, like
@@ -12,13 +14,10 @@ export default [
     '_peerConnStatusRtcMuteTimeout',
     'abTesting',
     'analytics.disabled',
+    'audioLevelsInterval',
     'autoRecord',
     'autoRecordToken',
     'avgRtpStatsN',
-    'callFlowsEnabled',
-    'callStatsConfIDNamespace',
-    'callStatsID',
-    'callStatsSecret',
 
     /**
      * The display name of the CallKit call representing the conference/meeting
@@ -34,6 +33,7 @@ export default [
      * @type string
      */
     'callDisplayName',
+    'callFlowsEnabled',
 
     /**
      * The handle
@@ -48,6 +48,9 @@ export default [
      * @type string
      */
     'callHandle',
+    'callStatsConfIDNamespace',
+    'callStatsID',
+    'callStatsSecret',
 
     /**
      * The UUID of the CallKit call representing the conference/meeting
@@ -66,15 +69,11 @@ export default [
 
     'channelLastN',
     'constraints',
+    'brandingRoomAlias',
     'debug',
     'debugAudioLevels',
     'defaultLanguage',
-    'desktopSharingChromeDisabled',
-    'desktopSharingChromeExtId',
-    'desktopSharingChromeMinExtVersion',
-    'desktopSharingChromeSources',
     'desktopSharingFrameRate',
-    'desktopSharingFirefoxDisabled',
     'desktopSharingSources',
     'disable1On1Mode',
     'disableAEC',
@@ -84,28 +83,42 @@ export default [
     'disableDeepLinking',
     'disableH264',
     'disableHPF',
+    'disableInviteFunctions',
+    'disableLocalVideoFlip',
     'disableNS',
     'disableRemoteControl',
+    'disableRemoteMute',
     'disableRtx',
+    'disableSimulcast',
     'disableSuspendVideo',
+    'disableThirdPartyRequests',
     'displayJids',
+    'doNotStoreRoom',
     'e2eping',
     'enableDisplayNameInStats',
+    'enableEmailInStats',
+    'enableIceRestart',
+    'enableInsecureRoomNameWarning',
     'enableLayerSuspension',
     'enableLipSync',
-    'disableLocalVideoFlip',
+    'enableOpusRed',
     'enableRemb',
-    'enableStatsID',
+    'enableScreenshotCapture',
     'enableTalkWhileMuted',
+    'enableNoAudioDetection',
+    'enableNoisyMicDetection',
     'enableTcc',
+    'enableAutomaticUrlCopy',
     'etherpad_base',
     'failICE',
+    'feedbackPercentage',
     'fileRecordingsEnabled',
     'firefox_fake_device',
     'forceJVB121Ratio',
     'gatherStats',
     'googleApiApplicationClientID',
     'hiddenDomain',
+    'hideLobbyButton',
     'hosts',
     'iAmRecorder',
     'iAmSipGateway',
@@ -113,26 +126,32 @@ export default [
     'ignoreStartMuted',
     'liveStreamingEnabled',
     'localRecording',
+    'maxFullResolutionParticipants',
     'minParticipants',
     'nick',
     'openBridgeChannel',
+    'opusMaxAverageBitrate',
     'p2p',
+    'pcStatsInterval',
     'preferH264',
+    'prejoinPageEnabled',
     'requireDisplayName',
+    'remoteVideoMenu',
+    'roomPasswordNumberOfDigits',
     'resolution',
     'startAudioMuted',
     'startAudioOnly',
     'startBitrate',
-    'startSilent',
     'startScreenSharing',
+    'startSilent',
     'startVideoMuted',
     'startWithAudioMuted',
     'startWithVideoMuted',
+    'stereo',
     'subject',
     'testing',
-    'useIPv6',
-    'useNicks',
     'useStunTurn',
+    'useTurnUdp',
     'webrtcIceTcpDisable',
     'webrtcIceUdpDisable'
-];
+].concat(extraConfigWhitelist);
